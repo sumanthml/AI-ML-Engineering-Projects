@@ -1,0 +1,34 @@
+📂 DATASET INFORMATION FOR EXPERIMENT 4
+=========================================
+
+📌 Title:
+Customer Segmentation Dataset (Mall Customers)
+
+📊 Description:
+This dataset contains basic details about mall customers, including:
+- Customer ID
+- Gender
+- Age
+- Annual Income (k$)
+- Spending Score (1–100)
+
+It is commonly used for clustering and segmentation projects in Machine Learning.
+
+🔗 Download Source:
+Kaggle - Customer Segmentation Tutorial
+https://www.kaggle.com/datasets/vjchoudhary7/customer-segmentation-tutorial-in-python?resource=download
+
+📁 File Name:
+Mall_Customers.csv
+
+⚠️ Note:
+You must be logged in to Kaggle to access and download the dataset.
+
+📅 Dataset Owner:
+Kaggle User - vjchoudhary7
+
+📘 Usage:
+Used in unsupervised learning projects such as:
+- K-Means Clustering
+- Gaussian Mixture Models (GMM)
+- Hierarchical Clustering
