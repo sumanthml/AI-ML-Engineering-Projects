@@ -1,70 +1,78 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import re
+import string
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
-from sklearn.mixture import GaussianMixture
-from sklearn.metrics import silhouette_score
-from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
-# Load raw dataset
-df = pd.read_csv("Mall_Customers.csv")
+# Download NLTK assets (run once)
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
 
-# Quick look at the first rows
-print("Raw data preview:")
-print(df.head())
+# 1️⃣ Load raw dataset
+df = pd.read_csv("amazon_reviews.csv")
+print("Raw data sample:")
+print(df[['reviewText', 'overall']].head())
 
-# Feature engineering and cleanup:
-#   - Rename columns for consistency
-#   - Drop rows with nulls (if any)
-df = df.rename(columns={
-    'Annual Income (k$)': 'AnnualIncome',
-    'Spending Score (1-100)': 'SpendingScore'
-})
-df.dropna(inplace=True)
+# 2️⃣ Keep only necessary columns and drop NaNs
+df = df[['reviewText', 'overall']].dropna()
 
-# Optional: Convert Gender to numeric if needed
-if 'Gender' in df.columns:
-    df['Gender'] = df['Gender'].map({'Male': 1, 'Female': 0})
+# 3️⃣ Assign sentiment labels
+def label_sentiment(r):
+    if r >= 4:
+        return 'positive'
+    elif r <= 2:
+        return 'negative'
+    else:
+        return 'neutral'
+df['sentiment'] = df['overall'].apply(label_sentiment)
 
-# Select features
-features = ['AnnualIncome', 'SpendingScore']
-X = df[features]
+# 4️⃣ Text cleaning
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
 
-# Scale features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+def clean_text(text):
+    text = str(text).lower()
+    text = re.sub(r"http\S+|<.*?>", "", text)
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    tokens = word_tokenize(text)
+    tokens = [lemmatizer.lemmatize(t) for t in tokens if t not in stop_words and t.isalpha()]
+    return " ".join(tokens)
 
-# PCA for noise reduction (optional but helpful)
-pca = PCA(n_components=2)
-X_pca = pca.fit_transform(X_scaled)
+df['cleaned'] = df['reviewText'].apply(clean_text)
 
-# Evaluate GMM cluster quality
-best_score, best_k = -1, None
-best_labels = None
+# 5️⃣ Split data
+X = df['cleaned']; y = df['sentiment']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-print("🔍 GMM Silhouette Scores")
-for k in range(2, 11):
-    gmm = GaussianMixture(n_components=k, random_state=42)
-    labels = gmm.fit_predict(X_pca)
-    score = silhouette_score(X_pca, labels)
-    print(f" k = {k}, score = {score:.4f}")
-    if score > best_score:
-        best_score, best_k, best_labels = score, k, labels
+# 6️⃣ Feature extraction
+tfidf = TfidfVectorizer(max_features=10000)
+X_train_vec = tfidf.fit_transform(X_train)
+X_test_vec = tfidf.transform(X_test)
 
-print(f"\n✅ Best GMM: k={best_k}, Silhouette Score={best_score:.4f}")
+# 7️⃣ Train model
+model = LogisticRegression(max_iter=200)
+model.fit(X_train_vec, y_train)
 
-# Store cluster labels and visualise
-df['GMM_Cluster'] = best_labels
-plt.figure(figsize=(8, 6))
-sns.scatterplot(
-    data=df, x='AnnualIncome', y='SpendingScore',
-    hue='GMM_Cluster', palette='Set2', s=100
-)
-plt.title(f"GMM Customer Segments (k={best_k})")
-plt.xlabel("Annual Income (k$)")
-plt.ylabel("Spending Score (1–100)")
-plt.legend(title="Cluster")
-plt.grid(True)
+# 8️⃣ Evaluate performance
+y_pred = model.predict(X_test_vec)
+print("🔹 Accuracy:", accuracy_score(y_test, y_pred))
+print("🔹 Report:\n", classification_report(y_test, y_pred))
+
+# 9️⃣ Confusion matrix plot
+cm = confusion_matrix(y_test, y_pred, labels=['positive','neutral','negative'])
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['pos','neu','neg'], yticklabels=['pos','neu','neg'])
+plt.xlabel("Predicted"); plt.ylabel("Actual")
+plt.title("Confusion Matrix")
 plt.show()
-
