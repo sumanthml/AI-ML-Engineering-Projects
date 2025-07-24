@@ -1,6 +1,6 @@
 pandas
 numpy
-matplotlib
-seaborn
+nltk
 scikit-learn
-
+seaborn
+matplotlib
