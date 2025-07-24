@@ -1,27 +1,14 @@
-# 📌 Customer Segmentation using Gaussian Mixture Model (GMM)
+# Sentiment Analysis on Amazon Product Reviews
 
-## 🔍 Objective
-Apply **Gaussian Mixture Models** for customer segmentation using **annual income** and **spending score**, aiming for meaningful real-world clusters.
+### 📌 Overview
+This uses a real-world **Amazon reviews dataset** to classify review sentiment into **Positive, Neutral, Negative** using NLP + Logistic Regression.
 
-## 🗂 Dataset
-- **Mall_Customers.csv** (200 rows; raw)
-- Features: `CustomerID`, `Gender`, `Age`, `Annual Income (k$)`, `Spending Score (1-100)`
+### 📂 Files
+- `amazon_reviews.csv` – Raw review text + ratings
+- `main.py` – Full preprocessing, modelling, evaluation
+- `requirements.txt` – Dependencies
 
-## 🛠 Workflow
-1. Load and inspect raw data
-2. Clean/transform columns (rename, drop nulls, encode gender)
-3. Scale features using `StandardScaler`
-4. Reduce dimensionality with `PCA`
-5. Fit GMM for `k=2..10`
-6. Evaluate using `Silhouette Score`
-7. Visualize best clusters
-
-## 📈 Best Result
-- **Best k**: `X` (replace in README)
-- **Silhouette Score**: `0.XXXX`
-
-## 🚀 Usage
+### 🔧 Setup
 ```bash
 pip install -r requirements.txt
-python gmm_segmentation.py
-
+python main.py
